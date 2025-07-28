@@ -13,12 +13,17 @@ def test_get_patient_summary_tool_requires_access(monkeypatch):
     summary_data = {"height": 180}
     PatientSummary.objects.create(patient=profile, json_data=summary_data)
     tool = GetPatientSummaryTool()
+
+    input_data = json.dumps({"user_id": str(user.id), "patient_id": str(profile.id)})
+
     # No access history yet -> should raise
     with pytest.raises(PermissionError):
-        tool._run(str(user.id), str(profile.id))
+        tool._run(input_data)
+
     # Grant access
     AccessHistory.objects.create(doctor=user, patient=profile)
-    result = tool._run(str(user.id), str(profile.id))
+
+    result = tool._run(input_data)
     assert json.loads(result) == summary_data
 
 @pytest.mark.django_db
