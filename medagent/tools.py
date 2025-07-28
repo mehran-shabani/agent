@@ -36,16 +36,16 @@ def get_summary_tool_func(inputs: dict) -> str:
 
 # ابزار آماده برای LangChain
 getpatientsummarytool = Tool(
-    name="get_patient_summary",
+    name: str = "get_patient_summary",
     func=get_summary_tool_func,
     is_single_input = True,
-    description="دریافت خلاصه بیمار با استفاده از user_id و patient_id (به صورت دیکشنری)"
+    description: str = "دریافت خلاصه بیمار با استفاده از user_id و patient_id (به صورت دیکشنری)"
 )
 
 # ---------------------- خلاصه جلسه ----------------------
 class SummarizeSessionTool(BaseTool):
-    name = "summarize_session"
-    description = "خلاصه‌سازی مکالمات یک جلسه با استفاده از session_id"
+    name: str = "summarize_session"
+    description: str = "خلاصه‌سازی مکالمات یک جلسه با استفاده از session_id"
 
     def _run(self, session_id: str) -> str:
         messages_qs = ChatMessage.objects.filter(session_id=session_id).order_by("created_at")
@@ -74,8 +74,8 @@ class SummarizeSessionTool(BaseTool):
 
 # ---------------------- تحلیل تصویر ----------------------
 class ImageAnalysisTool(BaseTool):
-    name = "analyze_image"
-    description = "تحلیل تصویر پزشکی از طریق URL"
+    name: str = "analyze_image"
+    description: str = "تحلیل تصویر پزشکی از طریق URL"
 
     def _run(self, image_url: str) -> str:
         result = vision_analyze(image_url, input_type="url")
@@ -87,8 +87,8 @@ class ImageAnalysisTool(BaseTool):
 
 # ---------------------- پالایش محتوا ----------------------
 class ProfanityCheckTool(BaseTool):
-    name = "check_profanity"
-    description = "بررسی وجود کلمات نامناسب در متن"
+    name: str = "check_profanity"
+    description: str = "بررسی وجود کلمات نامناسب در متن"
 
     def _run(self, text: str) -> str:
         result = profanity(text)
