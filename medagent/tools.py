@@ -11,7 +11,7 @@ from langchain.tools import BaseTool
 from medagent.models import (
     PatientSummary, AccessHistory, ChatSession, SessionSummary
 )
-from talkbot_client import tb_chat, vision_analyze, profanity
+from medagent.talkbot_client import tb_chat, vision_analyze, profanity
 
 class GetPatientSummaryTool(BaseTool):
     name = "patientsummary"
