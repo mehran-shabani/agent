@@ -14,8 +14,8 @@ from medagent.models import (
 from medagent.talkbot_client import tb_chat, vision_analyze, profanity
 
 class GetPatientSummaryTool(BaseTool):
-    name = "patientsummary"
-    description = "Retrieve the JSON patient summary if the doctor has access."
+    name: str = "patientsummary"
+    description: str = "Retrieve the JSON patient summary if the doctor has access."
 
     def _run(self, doctor_id: str, patient_id: str) -> str:
         if not AccessHistory.objects.filter(doctor_id=doctor_id, patient_id=patient_id).exists():
@@ -24,8 +24,8 @@ class GetPatientSummaryTool(BaseTool):
         return json.dumps(summary.json_data, ensure_ascii=False)
 
 class SummarizeSessionTool(BaseTool):
-    name = "summarizesession"
-    description = "Summarize a chat session and store the result."
+    name: str =  "summarizesession"
+    description: str = "Summarize a chat session and store the result."
 
     def _run(self, session_id: str) -> str:
         sess = ChatSession.objects.prefetch_related("messages").get(id=session_id)
@@ -54,15 +54,15 @@ class SummarizeSessionTool(BaseTool):
         return "Summary stored"
 
 class ImageAnalysisTool(BaseTool):
-    name = "imageanalysis"
-    description = "Analyze an image and return a JSON object with findings."
+    name: str = "imageanalysis"
+    description: str = "Analyze an image and return a JSON object with findings."
 
     def _run(self, image_url: str) -> str:
         return json.dumps(vision_analyze(image_url), ensure_ascii=False)
 
 class ProfanityCheckTool(BaseTool):
-    name = "profanitycheck"
-    description = "Return 'True' if the text contains profanity."
+    name: str = "profanitycheck"
+    description: str = "Return 'True' if the text contains profanity."
 
     def _run(self, text: str) -> str:
         return str(profanity(text))
