@@ -14,7 +14,7 @@ from medagent.models import (
 from talkbot_client import tb_chat, vision_analyze, profanity
 
 class GetPatientSummaryTool(BaseTool):
-    name = "get_patient_summary"
+    name = "patientsummary"
     description = "Retrieve the JSON patient summary if the doctor has access."
 
     def _run(self, doctor_id: str, patient_id: str) -> str:
@@ -24,7 +24,7 @@ class GetPatientSummaryTool(BaseTool):
         return json.dumps(summary.json_data, ensure_ascii=False)
 
 class SummarizeSessionTool(BaseTool):
-    name = "summarize_session"
+    name = "summarizesession"
     description = "Summarize a chat session and store the result."
 
     def _run(self, session_id: str) -> str:
@@ -54,14 +54,14 @@ class SummarizeSessionTool(BaseTool):
         return "Summary stored"
 
 class ImageAnalysisTool(BaseTool):
-    name = "image_analysis"
+    name = "imageanalysis"
     description = "Analyze an image and return a JSON object with findings."
 
     def _run(self, image_url: str) -> str:
         return json.dumps(vision_analyze(image_url), ensure_ascii=False)
 
 class ProfanityCheckTool(BaseTool):
-    name = "profanity_check"
+    name = "profanitycheck"
     description = "Return 'True' if the text contains profanity."
 
     def _run(self, text: str) -> str:
