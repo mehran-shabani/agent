@@ -5,7 +5,7 @@ This module initializes a LangChain agent with a small set of tools. The
 agent uses a zero-shot ReAct strategy and a simple chat model.
 """
 
-from langchain.chat_models import ChatOpenAI
+from medagent.talkbot_client import tb_chat
 from langchain.agents import initialize_agent, AgentType
 from medagent.tools import (
     GetPatientSummaryTool, SummarizeSessionTool,
