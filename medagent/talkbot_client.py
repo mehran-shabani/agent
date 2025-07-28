@@ -15,7 +15,7 @@ import json
 import requests
 
 TAKBOT_BASE = os.getenv("TAKBOT_BASE_URL", "https://api.talkbot.ir/v1")
-API_KEY = os.getenv("TAKBOT_API_KEY")
+API_KEY = os.getenv("TAKBOT_API_KEY", "sk-23doce1205uh7m9oijd2&pcw4df2449210")
 SIGN_SECRET = os.getenv("TAKBOT_SIGN_SECRET", "")
 
 def _headers(body):
@@ -23,9 +23,6 @@ def _headers(body):
         "Authorization": f"Bearer {API_KEY}",
         "Content-Type": "application/json",
     }
-    if SIGN_SECRET:
-        digest = hmac.new(SIGN_SECRET.encode(), json.dumps(body).encode(), hashlib.sha256).digest()
-        h["X-Sign"] = base64.b64encode(digest).decode()
     return h
 
 def tb_chat(messages, model="o3-mini"):
