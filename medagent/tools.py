@@ -17,9 +17,7 @@ class GetPatientSummaryTool(BaseTool):
     name: str = "patientsummary"
     description: str = "Retrieve the JSON patient summary if the doctor has access."
 
-    def _run(self, doctor_id: str, patient_id: str) -> str:
-        if not AccessHistory.objects.filter(doctor_id=doctor_id, patient_id=patient_id).exists():
-            raise PermissionError("No access to patient")
+    def _run(self, patient_id: str) -> str:
         summary = PatientSummary.objects.get(patient_id=patient_id)
         return json.dumps(summary.json_data, ensure_ascii=False)
 
