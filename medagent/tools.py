@@ -12,6 +12,7 @@ from medagent.talkbot_client import tb_chat, vision_analyze, profanity
 
 
 class GetPatientSummaryTool:
+    is_single_input = True
     def _run(self, patient_id: str) -> str:
         
         summary = PatientSummary.objects.get(patient_id=patient_id)
@@ -19,6 +20,7 @@ class GetPatientSummaryTool:
 
 
 class SummarizeSessionTool:
+    is_single_input = True
     def _run(self, session_id: str) -> str:
         messages_qs = ChatMessage.objects.filter(session_id=session_id).order_by("created_at")
         if not messages_qs.exists():
@@ -39,12 +41,14 @@ class SummarizeSessionTool:
 
 
 class ImageAnalysisTool:
+    is_single_input = True
     def _run(self, image_url: str) -> str:
         result = vision_analyze(image_url)
         return json.dumps(result, ensure_ascii=False)
 
 
 class ProfanityCheckTool:
+    is_single_input = True
     def _run(self, text: str) -> str:
         result = profanity(text)
         if isinstance(result, str):
