@@ -5,12 +5,12 @@ This module initializes a LangChain agent with a small set of tools. The
 agent uses a zero-shot ReAct strategy and a simple chat model.
 """
 
-from medagent.talkbot_client import tb_chat
 from langchain.agents import initialize_agent, AgentType
 from medagent.tools import (
     GetPatientSummaryTool, SummarizeSessionTool,
     ImageAnalysisTool, ProfanityCheckTool
 )
+from medagent.talkbot_llm import TalkBotLLM  # 👈 LLM جدید
 
 TOOLS = [
     GetPatientSummaryTool(),
@@ -19,7 +19,7 @@ TOOLS = [
     ProfanityCheckTool(),
 ]
 
-llm = ChatOpenAI(model_name="o3-mini", temperature=0.1)
+llm = TalkBotLLM(model="o3-mini")
 
 agent = initialize_agent(
     tools=TOOLS,
