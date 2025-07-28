@@ -52,7 +52,7 @@ class VerifyOTP(APIView):
 
         patient = get_object_or_404(PatientProfile, national_code=nc)
         otp = OTPVerification.objects.filter(patient=patient).latest("created_at")
-        if not otp.valid(code):
+        if not otp.valid(code) and AccessHistory.objects.filter(doctor_id=user_id, patient_id=patient_id).exists():
             return Response({"error": "OTP نامعتبر یا منقضی"}, status=400)
 
         AccessHistory.objects.create(doctor=request.user, patient=patient)
