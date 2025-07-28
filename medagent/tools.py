@@ -7,60 +7,50 @@ TakBot client to perform their work.
 """
 
 import json
-from langchain.tools import BaseTool
-from medagent.models import (
-    PatientSummary, AccessHistory, ChatSession, SessionSummary
-)
+from medagent.models import PatientSummary, AccessHistory, SessionSummary, ChatMessage
 from medagent.talkbot_client import tb_chat, vision_analyze, profanity
 
-class GetPatientSummaryTool(BaseTool):
-    name: str = "patientsummary"
-    description: str = "Retrieve the JSON patient summary if the doctor has access."
 
-    def _run(self, patient_id: str) -> str:
+class GetPatientSummaryTool:
+    def _run(self, user_id: str, patient_id: str) -> str:
+        if not AccessHistory.objects.filter(doctor_id=user_id, patient_id=patient_id).exists():
+            raise PermissionError("Access denied: OTP not verified")
         summary = PatientSummary.objects.get(patient_id=patient_id)
         return json.dumps(summary.json_data, ensure_ascii=False)
 
-class SummarizeSessionTool(BaseTool):
-    name: str =  "summarizesession"
-    description: str = "Summarize a chat session and store the result."
 
+class SummarizeSessionTool:
     def _run(self, session_id: str) -> str:
-        sess = ChatSession.objects.prefetch_related("messages").get(id=session_id)
-        history = "\n".join(f"{m.role}: {m.content}" for m in sess.messages.order_by("created_at"))
-        prompt = (
-            "خلاصهٔ ≤250 واژه + JSON دقیق با فیلدهای تعیین‌شده بساز.\n"
-            "——\n" + history
-        )
-        response = tb_chat([{"role": "user", "content": prompt}])
+        messages_qs = ChatMessage.objects.filter(session_id=session_id).order_by("created_at")
+        if not messages_qs.exists():
+            return "No messages to summarize"
+        messages = [{"role": msg.role, "content": msg.content} for msg in messages_qs]
+        result = tb_chat(messages, model="o3-mini")
         try:
-            data = json.loads(response)
-            text_summary = data.pop("text_summary")
-            json_summary = data
-            tokens_used = data.get("token_count", 0)
-        except (json.JSONDecodeError, KeyError):
-            # If the response is not valid JSON or missing expected keys, store the raw response
-            text_summary = response
-            json_summary = {}
-            tokens_used = 0
-        SessionSummary.objects.create(
-            session=sess,
-            text_summary=text_summary,
-            json_summary=json_summary,
-            tokens_used=tokens_used,
-        )
-        return "Summary stored"
+            summary_data = json.loads(result)
+            SessionSummary.objects.create(
+                session_id=session_id,
+                text_summary=summary_data.get("text_summary", ""),
+                json_summary=summary_data,
+                tokens_used=summary_data.get("token_count", 0)
+            )
+            return "Summary stored"
+        except Exception:
+            return "Invalid response from summarization service"
 
-class ImageAnalysisTool(BaseTool):
-    name: str = "imageanalysis"
-    description: str = "Analyze an image and return a JSON object with findings."
 
+class ImageAnalysisTool:
     def _run(self, image_url: str) -> str:
-        return json.dumps(vision_analyze(image_url), ensure_ascii=False)
+        result = vision_analyze(image_url)
+        return json.dumps(result, ensure_ascii=False)
 
-class ProfanityCheckTool(BaseTool):
-    name: str = "profanitycheck"
-    description: str = "Return 'True' if the text contains profanity."
 
+class ProfanityCheckTool:
     def _run(self, text: str) -> str:
-        return str(profanity(text))
+        result = profanity(text)
+        if isinstance(result, str):
+            try:
+                result = json.loads(result)
+            except Exception:
+                return "False"
+        return str(result.get("contains_profanity", False))
