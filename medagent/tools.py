@@ -12,9 +12,8 @@ from medagent.talkbot_client import tb_chat, vision_analyze, profanity
 
 
 class GetPatientSummaryTool:
-    def _run(self, user_id: str, patient_id: str) -> str:
-        if not AccessHistory.objects.filter(doctor_id=user_id, patient_id=patient_id).exists():
-            raise PermissionError("Access denied: OTP not verified")
+    def _run(self, patient_id: str) -> str:
+        
         summary = PatientSummary.objects.get(patient_id=patient_id)
         return json.dumps(summary.json_data, ensure_ascii=False)
 
