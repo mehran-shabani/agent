@@ -36,10 +36,10 @@ def get_summary_tool_func(inputs: dict) -> str:
 
 # ابزار آماده برای LangChain
 getpatientsummarytool = Tool(
-    name: str = "get_patient_summary",
+    name = "get_patient_summary",
     func=get_summary_tool_func,
     is_single_input = True,
-    description: str = "دریافت خلاصه بیمار با استفاده از user_id و patient_id (به صورت دیکشنری)"
+    description = "دریافت خلاصه بیمار با استفاده از user_id و patient_id (به صورت دیکشنری)"
 )
 
 # ---------------------- خلاصه جلسه ----------------------
