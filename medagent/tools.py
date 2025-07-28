@@ -35,7 +35,7 @@ def get_summary_tool_func(inputs: dict) -> str:
         return "خلاصه‌ای برای بیمار یافت نشد"
 
 # ابزار آماده برای LangChain
-getpatientsummarytool = Tool(
+GetPatientSummaryTool = Tool(
     name = "get_patient_summary",
     func=get_summary_tool_func,
     is_single_input = True,
