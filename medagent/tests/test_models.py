@@ -1,7 +1,7 @@
 import hashlib
 import datetime
-
 import pytest
+from unittest import mock
 from django.utils import timezone
 from freezegun import freeze_time
 from django.contrib.auth import get_user_model
@@ -14,22 +14,20 @@ from sub.models import SubscriptionPlan, Subscription
 
 User = get_user_model()
 
+
 @pytest.mark.django_db
 def test_otp_verification_creation_and_validation():
     user = User.objects.create_user(username="testuser", password="pwd")
     profile = PatientProfile.objects.create(user=user, national_code="1234567890", phone_number="09120000000")
     raw_code = "123456"
     otp = OTPVerification.create(profile, raw_code)
-    # Ensure the hash matches
     assert otp.code_hash == hashlib.sha256(raw_code.encode()).hexdigest()
-    # Should be valid immediately after creation
     assert otp.valid(raw_code)
-    # Invalid with wrong code
     assert not otp.valid("000000")
-    # After expiration time, should not be valid
     future = timezone.now() + datetime.timedelta(minutes=11)
     with freeze_time(future):
         assert not otp.valid(raw_code)
+
 
 @pytest.mark.django_db
 def test_subscription_is_active_property():
@@ -37,15 +35,15 @@ def test_subscription_is_active_property():
     plan = SubscriptionPlan.objects.create(name="Monthly", days=31, price=300)
     now = timezone.now()
     sub = Subscription.objects.create(user=user, plan=plan, end_date=now + datetime.timedelta(days=plan.days))
-    # Immediately active
     assert sub.is_active
-    # After expiry
     future = now + datetime.timedelta(days=plan.days + 1)
     with freeze_time(future):
         assert not sub.is_active
 
+
 @pytest.mark.django_db
-def test_chat_session_and_message_creation():
+@mock.patch("medagent.talkbot_client.profanity", return_value=False)
+def test_chat_session_and_message_creation(mock_profanity):
     user = User.objects.create_user(username="chatter", password="pwd")
     profile = PatientProfile.objects.create(user=user, national_code="0987654321", phone_number="09120000001")
     session = ChatSession.objects.create(owner=user, patient=profile)
@@ -56,8 +54,10 @@ def test_chat_session_and_message_creation():
     assert msg_assistant.role == "assistant"
     assert str(msg_owner).startswith("[owner]")
 
+
 @pytest.mark.django_db
-def test_session_summary_creation():
+@mock.patch("medagent.talkbot_client.profanity", return_value=False)
+def test_session_summary_creation(mock_profanity):
     user = User.objects.create_user(username="summarizer", password="pwd")
     profile = PatientProfile.objects.create(user=user, national_code="1111111111", phone_number="09120000002")
     session = ChatSession.objects.create(owner=user, patient=profile)
