@@ -61,6 +61,7 @@ kavenegar
 kombu
 kubernetes
 langchain
+langchain-community
 langchain-core
 langchain-text-splitters
 langsmith
