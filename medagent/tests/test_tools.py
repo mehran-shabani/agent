@@ -50,11 +50,11 @@ def test_summarize_session_tool_creates_summary(monkeypatch):
 
 @pytest.mark.django_db
 def test_image_analysis_tool(monkeypatch):
-    def fake_vision(url, model="flux-ai"):
+    def fake_vision(image_path: str, prompt: str | None = None, model="flux-ai"):
         return {"label": "X-ray", "finding": "normal"}
     monkeypatch.setattr("medagent.talkbot_client.vision_analyze", fake_vision)
     tool = ImageAnalysisTool()
-    result = tool._run("http://example.com/image.png")
+    result = tool._run("/tmp/x.png", prompt="P")
     assert json.loads(result) == {"label": "X-ray", "finding": "normal"}
 
 def test_profanity_check_tool(monkeypatch):

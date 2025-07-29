@@ -244,7 +244,7 @@ class _ChatRoomState extends State<ChatRoom> with TickerProviderStateMixin, Widg
   static const double _kAppBarHeight = 56;
   static const Duration _sessionTimeoutDuration = Duration(seconds: 10);
   
-  final ChatService _chatService = ChatService(baseUrl: 'http://localhost:8000');
+  final ChatService _chatService = ChatService();
   final ImagePicker _imagePicker = ImagePicker();
   
   final TextEditingController messageController = TextEditingController();
@@ -295,29 +295,9 @@ class _ChatRoomState extends State<ChatRoom> with TickerProviderStateMixin, Widg
     super.didChangeAppLifecycleState(state);
     
     if (state == AppLifecycleState.resumed) {
-      _checkActiveSession();
+      _startSessionTimeout();
     } else if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
       _pauseSessionTimeout();
-    }
-  }
-
-  Future<void> _checkActiveSession() async {
-    if (currentSessionId != null) {
-      try {
-        final isActive = await _chatService.isSessionActive(currentSessionId!);
-        if (!isActive) {
-          setState(() {
-            currentSessionId = null;
-            currentMessages.clear();
-          });
-          CustomSnackBar.show('جلسه قبلی بسته شد', context);
-          _initializeChat();
-        } else {
-          _startSessionTimeout();
-        }
-      } catch (e) {
-        // Handle error
-      }
     }
   }
 
@@ -368,7 +348,7 @@ class _ChatRoomState extends State<ChatRoom> with TickerProviderStateMixin, Widg
   Future<void> _autoCloseSession() async {
     if (currentSessionId != null) {
       try {
-        await _chatService.autoCloseSession(currentSessionId!);
+        await _chatService.endSession(currentSessionId!);
         setState(() {
           currentSessionId = null;
           currentMessages.clear();
@@ -868,7 +848,10 @@ class _ChatRoomState extends State<ChatRoom> with TickerProviderStateMixin, Widg
       _resetSessionTimeout();
 
       try {
-        final response = await _chatService.analyzeImage(base64Image);
+        final response = await _chatService.analyzeImage(
+          imageFile: File(image.path),
+          caption: caption,
+        );
 
         if (!mounted) return;
 

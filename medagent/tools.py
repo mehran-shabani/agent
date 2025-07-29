@@ -97,25 +97,26 @@ class SummarizeSessionTool(BaseTool):
 class ImageAnalysisTool(BaseTool):
     name: str = "analyze_image"
     description: str = (
-        "تحلیل تصویر پزشکی از طریق URL (ورودی: str). نتیجه تحلیل به صورت JSON بازگردانده می‌شود."
+        "آپلود تصویر پزشکی (مسیر فایل) به مدل GPT-4 Vision / Gemini Vision و "
+        "دریافت خروجی JSON تحلیل."
     )
 
-    def _run(self, image_url: str) -> str:
-        # import داخل متد تا monkeypatch در تست‌ها موثر باشد
+    def _run(self, image_path: str, prompt: str | None = None) -> str:
+        """
+        image_path: مسیر فایل روی دیسک که باید Base64 شود.
+        prompt: متنِ دلخواهِ کاربر برای مدل (optional).
+        """
         from medagent.talkbot_client import vision_analyze
 
-        # برای سازگاری با امضاهای مختلف (تست شما input_type را قبول نمی‌کند)
-        try:
-            result = vision_analyze(image_url, input_type="url")
-        except TypeError:
-            # اگر mock امضای (url, model="flux-ai") داشته باشد
-            try:
-                result = vision_analyze(image_url, model="flux-ai")
-            except TypeError:
-                # در نهایت فقط آرگومان اجباری
-                result = vision_analyze(image_url)
+        # اگر کاربر پرامپت نداد، یک توضیح پیش‌فرض می‌فرستیم
+        prompt = prompt or "Explain the medical findings in this image."
 
+        result = vision_analyze(image_path=image_path, prompt=prompt)
         return json.dumps(result, ensure_ascii=False)
+
+    @property
+    def is_single_input(self) -> bool:  # pragma: no cover - override for agent
+        return False
 
     def _arun(self, *args: Any, **kwargs: Any):
         raise NotImplementedError("async not supported")
