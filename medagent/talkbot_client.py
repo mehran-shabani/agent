@@ -13,9 +13,10 @@ import base64
 import hashlib
 import mimetypes
 import requests
+from django.conf import settings
 
-TAKBOT_BASE = os.getenv("TALKBOT_API", "https://api.talkbot.ir/v1")
-TALKBOT_TOKEN = os.getenv("TALKBOT_API_KEY")
+TALKBOT_BASE = settings.TALKBOT_API_BASE
+TALKBOT_TOKEN = settings.TALKBOT_API_KEY
 
 
 def _headers(data: dict):
@@ -36,7 +37,7 @@ def profanity(text: str) -> dict:
     body = {"text": text}
     try:
         r = requests.post(
-            f"{TAKBOT_BASE}/analysis/profanity/REQ",
+            f"{TALKBOT_BASE}/analysis/profanity/REQ",
             headers=_headers(body),
             json=body,
             timeout=10
@@ -89,7 +90,7 @@ def vision_analyze(image_input: str, model="flux-ai", input_type="url") -> dict:
             body = {"url": image_input, "model": model}
 
         r = requests.post(
-            f"{TAKBOT_BASE}/analysis/vision",
+            f"{TALKBOT_BASE}/analysis/vision",
             headers=_headers(body),
             json=body,
             timeout=20
@@ -110,7 +111,7 @@ def tb_chat(messages: list[dict], model="o3-mini") -> str:
     body = {"messages": messages, "model": model}
     try:
         r = requests.post(
-            f"{TAKBOT_BASE}/chat",
+            f"{TALKBOT_BASE}/chat",
             headers=_headers(body),
             json=body,
             timeout=30

@@ -1,11 +1,11 @@
 import os
-from decouple import config
+
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me')
-DEBUG = config('DEBUG', default=True, cast=bool)
+SECRET_KEY = os.getenv('SECRET_KEY', default='django-insecure-change-me')
+DEBUG = os.getenv('DEBUG', default=True)
 
 ALLOWED_HOSTS = ['*']
 
@@ -58,8 +58,8 @@ DATABASES = {
 }
 
 # API Settings
-TALKBOT_API_URL = config('TALKBOT_API_URL', default='https://api.talkbot.ir/v1/chat/completions')
-TALKBOT_API_KEY = config('TALKBOT_API_KEY', default='sk-your-api-key-here')
+TALKBOT_API_BASE = os.getenv('TALKBOT_API_BASE', default='https://api.talkbot.ir/v1')
+TALKBOT_API_KEY = os.getenv('TALKBOT_API_KEY', default='sk-your-api-key-here')
 
 AUTH_USER_MODEL = 'sub.CustomUser'
 
