@@ -1,130 +1,163 @@
+// lib/services/chat_service.dart
+// A single façade that the UI talks to. It hides token-handling via
+// shared_preferences, builds the MedAgent-backend requests, and knows
+// how to format a Gemini-Vision message when the user attaches a
+// medical image.
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:mime/mime.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Your Django-backend root (e.g. https://med.example.com)
+const String backendBase = '<BACKEND_BASE_URL_HERE>'; // keep ⬅️  remember to fill in!
+
+/// Convenience wrapper around SharedPreferences so we always have the latest
+Future<SharedPreferences> get _prefs async => SharedPreferences.getInstance();
+
 class ChatService {
-  ChatService({required this.baseUrl});
+  static const _hdrJson = {'Content-Type': 'application/json; charset=utf-8'};
 
-  final String baseUrl;
+  //--------------------------------------------------------------------------
+  //  TOKEN HELPERS
+  //--------------------------------------------------------------------------
+  Future<String?> _readToken() async => (await _prefs).getString('access');
 
-  Future<String?> _token() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('access_token') ?? prefs.getString('access');
-  }
-
-  Future<Map<String, String>> _headers({bool jsonBody = true}) async {
-    final token = await _token();
+  Future<Map<String, String>> _authorizedHeaders() async {
+    final token = await _readToken();
+    if (token == null) throw Exception('No access token available');
     return {
-      if (jsonBody) 'Content-Type': 'application/json',
-      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      ..._hdrJson,
+      'Authorization': 'Bearer $token',
     };
   }
 
-  Uri _url(String path) => Uri.parse('$baseUrl$path');
+  //--------------------------------------------------------------------------
+  //  HIGH-LEVEL API SURFACE
+  //--------------------------------------------------------------------------
 
-  http.Client get _client => http.Client();
-
-  // Auth & OTP
-  Future<void> requestOtp(String nationalCode) async {
-    final resp = await _client.post(
-      _url('/api/otp/request/'),
-      headers: await _headers(),
-      body: jsonEncode({'national_code': nationalCode}),
+  /// GET /api/patient/profile/ – returns a (possibly null) JSON map.
+  Future<Map<String, dynamic>?> getMedicalProfile() async {
+    final r = await http.get(
+      Uri.parse('$backendBase/api/patient/profile/'),
+      headers: await _authorizedHeaders(),
     );
-    if (resp.statusCode != 200) {
-      throw HttpException('OTP request failed (${resp.statusCode})');
-    }
+    if (r.statusCode == 200) return jsonDecode(r.body) as Map<String, dynamic>;
+    return null;
   }
 
-  Future<String> verifyOtp({required String nationalCode, required String code}) async {
-    final resp = await _client.post(
-      _url('/api/otp/verify/'),
-      headers: await _headers(),
-      body: jsonEncode({'national_code': nationalCode, 'code': code}),
-    );
-    if (resp.statusCode != 200) {
-      throw HttpException('OTP verify failed (${resp.statusCode})');
+  /// GET /api/session/{sessionId}/history/
+  Future<List<Map<String, dynamic>>> getChatHistory({String? sessionId}) async {
+    final url = sessionId == null
+        ? '$backendBase/api/session/history/'
+        : '$backendBase/api/session/$sessionId/history/';
+    final r = await http.get(Uri.parse(url), headers: await _authorizedHeaders());
+    if (r.statusCode == 200) {
+      final list = jsonDecode(r.body) as List;
+      return list.cast<Map<String, dynamic>>();
     }
-    final data = jsonDecode(resp.body) as Map<String, dynamic>;
-    final token = data['access'] as String;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('access_token', token);
-    return token;
+    return [];
   }
 
-  // Chat session
-  Future<int> createSession(int patientId, {String? purpose}) async {
-    final resp = await _client.post(
-      _url('/api/session/create/'),
-      headers: await _headers(),
-      body: jsonEncode({'patient_id': patientId, if (purpose != null) 'purpose': purpose}),
+  /// POST /api/session/create/
+  Future<Map<String, dynamic>> createNewSession({
+    required String sessionType, // forwarded as `purpose` on backend
+    int? patientId,
+  }) async {
+    final body = {
+      if (patientId != null) 'patient_id': patientId,
+      'purpose': sessionType,
+    };
+    final r = await http.post(
+      Uri.parse('$backendBase/api/session/create/'),
+      headers: await _authorizedHeaders(),
+      body: jsonEncode(body),
     );
-    if (resp.statusCode != 201) {
-      throw HttpException('Create session failed (${resp.statusCode})');
+    if (r.statusCode == 201) {
+      return jsonDecode(r.body) as Map<String, dynamic>;
     }
-    return (jsonDecode(resp.body) as Map<String, dynamic>)['session_id'] as int;
+    throw HttpException('Create session failed (${r.statusCode})');
   }
 
-  Future<String> sendMessage({required int sessionId, required String content}) async {
-    final resp = await _client.post(
-      _url('/api/session/$sessionId/message/'),
-      headers: await _headers(),
-      body: jsonEncode({'session': sessionId, 'content': content}),
+  /// POST /api/session/{sessionId}/message/
+  Future<Map<String, dynamic>> sendMessage({
+    required int sessionId,
+    required String message,
+  }) async {
+    final r = await http.post(
+      Uri.parse('$backendBase/api/session/$sessionId/message/'),
+      headers: await _authorizedHeaders(),
+      body: jsonEncode({'session': sessionId, 'content': message}),
     );
-    if (resp.statusCode != 200) {
-      throw HttpException('Send message failed (${resp.statusCode})');
+    if (r.statusCode == 200) {
+      return jsonDecode(r.body) as Map<String, dynamic>;
     }
-    return (jsonDecode(resp.body) as Map<String, dynamic>)['assistant_reply'] as String;
+    throw HttpException('Send message failed (${r.statusCode})');
   }
 
-  Future<void> endSession(int sessionId) async {
-    final resp = await _client.patch(
-      _url('/api/session/end/'),
-      headers: await _headers(),
+  /// PATCH /api/session/end/
+  Future<bool> endSession(int sessionId) async {
+    final r = await http.patch(
+      Uri.parse('$backendBase/api/session/end/'),
+      headers: await _authorizedHeaders(),
       body: jsonEncode({'session_id': sessionId}),
     );
-    if (resp.statusCode != 200) {
-      throw HttpException('End session failed (${resp.statusCode})');
-    }
+    return r.statusCode == 200;
   }
 
-  // Image analysis
-  Future<Map<String, dynamic>> analyzeImage(String base64) async {
-    final resp = await _client.post(
-      _url('/api/tools/analyze_image/'),
-      headers: await _headers(),
-      body: jsonEncode({'b64': base64}),
+  //--------------------------------------------------------------------------
+  //  MEDICAL IMAGE ANALYSIS (GPT-4 V / Gemini Vision)
+  //--------------------------------------------------------------------------
+  /// Sends a local image + (optional) user caption for analysis.
+  ///
+  /// The MedAgent backend exposes /analysis/vision that will forward the
+  /// request to TalkBot’s /v1/chat/completions with the proper format.
+  /// We therefore post a JSON payload that already contains the array of
+  /// messages expected by GPT-4 Vision / Gemini-Pro Vision.
+  Future<Map<String, dynamic>> analyzeImage({
+    required File imageFile,
+    String caption = '',
+    String model = 'gemini-pro-vision',
+  }) async {
+    final bytes = await imageFile.readAsBytes();
+    final b64 = base64Encode(bytes);
+    final mime = lookupMimeType(imageFile.path) ?? 'image/jpeg';
+
+    final imageDataUri = 'data:$mime;base64,$b64';
+
+    final messages = [
+      {
+        'role': 'user',
+        'content': [
+          {
+            'type': 'image_url',
+            'image_url': {'url': imageDataUri},
+          },
+          {
+            'type': 'text',
+            'text': caption.isEmpty ? 'Analyse this medical image' : caption,
+          },
+        ],
+      },
+    ];
+
+    // 1️⃣  Hit MedAgent backend – it will relay the request to TalkBot.
+    final r = await http.post(
+      Uri.parse('$backendBase/analysis/vision'),
+      headers: await _authorizedHeaders(),
+      body: jsonEncode({
+        'model': model,
+        'messages': messages,
+        'temperature': 0.7,
+        'stream': false,
+        'top_p': 1.0,
+      }),
     );
-    if (resp.statusCode != 200) {
-      throw HttpException('Analyze image failed (${resp.statusCode})');
-    }
-    return jsonDecode(resp.body) as Map<String, dynamic>;
-  }
 
-  // Session management
-  Future<bool> isSessionActive(int sessionId) async {
-    try {
-      final resp = await _client.get(
-        _url('/api/session/$sessionId/status/'),
-        headers: await _headers(jsonBody: false),
-      );
-      if (resp.statusCode == 200) {
-        final data = jsonDecode(resp.body) as Map<String, dynamic>;
-        return data['is_active'] as bool;
-      }
-      return false;
-    } catch (e) {
-      return false;
+    if (r.statusCode == 200) {
+      return jsonDecode(r.body) as Map<String, dynamic>;
     }
-  }
-
-  // Auto-close session after timeout
-  Future<void> autoCloseSession(int sessionId) async {
-    try {
-      await endSession(sessionId);
-    } catch (e) {
-      // Session already closed or error
-    }
+    throw HttpException('Image analysis failed (${r.statusCode})');
   }
 }
