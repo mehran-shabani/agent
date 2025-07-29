@@ -1,3 +1,0 @@
-2025-07-29 11:41:45 - django.request - WARNING - Forbidden: /api/otp/request/
-2025-07-29 11:41:47 - django.request - WARNING - Forbidden: /api/otp/request/
-2025-07-29 11:41:48 - django.request - WARNING - Forbidden: /api/session/create/
