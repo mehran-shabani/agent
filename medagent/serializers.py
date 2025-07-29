@@ -21,7 +21,13 @@ class OTPVerifySerializer(serializers.Serializer):
 
 class CreateSessionSerializer(serializers.Serializer):
     patient_id = serializers.IntegerField()
-    purpose = serializers.CharField(max_length=120, allow_blank=True)
+    purpose = serializers.CharField(
+        max_length=120,
+        allow_blank=True,
+        required=False,        # ← فیلد اختیاری شد
+        default=""
+    )
+
 
 class ChatMessageSerializer(serializers.ModelSerializer):
     class Meta:
