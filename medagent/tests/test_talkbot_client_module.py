@@ -28,8 +28,8 @@ def test_encode_and_hash(tmp_path, monkeypatch):
 def test_headers(monkeypatch):
     reload_module()
     monkeypatch.setattr(tc, 'TALKBOT_TOKEN', 'token')
-    h = tc._headers({'a': 1})
-    assert h['Authorization'] == 'token'
+    h = tc._headers()
+    assert h['Authorization'] == 'Bearer token'
     assert h['Content-Type'] == 'application/json'
 
 
@@ -57,11 +57,10 @@ def test_vision_analyze_base64(monkeypatch, tmp_path):
     file_path = tmp_path / 'img.png'
     file_path.write_text('x')
     monkeypatch.setattr(tc, 'encode_image_to_base64', lambda p: 'DATA')
-    monkeypatch.setattr(tc, 'sha256_file_hash', lambda p: 'HASH')
-    def fake_post(url, headers=None, json=None, timeout=20):
-        return DummyResp({'ok': True, 'body': json})
+    def fake_post(url, headers=None, json=None, timeout=60):
+        return DummyResp({'ok': True, 'payload': json})
     monkeypatch.setattr(tc, 'requests', type('R', (), {'post': fake_post}))
-    result = tc.vision_analyze(str(file_path), input_type='base64')
+    result = tc.vision_analyze(str(file_path), prompt='P')
     assert result['ok'] is True
-    assert result['body']['image_base64'] == 'DATA'
-    assert result['body']['image_hash'] == 'HASH'
+    body = result['payload']
+    assert body['messages'][0]['content'][0]['image_url']['url'] == 'DATA'
