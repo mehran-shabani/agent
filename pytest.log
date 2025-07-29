@@ -1,0 +1,6 @@
+2025-07-29 11:05:39 - django.request - WARNING - Forbidden: /api/otp/request/
+2025-07-29 11:05:40 - django.request - WARNING - Forbidden: /api/otp/request/
+2025-07-29 11:05:41 - django.request - WARNING - Forbidden: /api/session/create/
+2025-07-29 11:05:41 - django.request - WARNING - Bad Request: /api/session/create/
+2025-07-29 11:05:42 - django.request - WARNING - Bad Request: /api/session/create/
+2025-07-29 11:05:42 - django.request - WARNING - Bad Request: /api/session/create/
