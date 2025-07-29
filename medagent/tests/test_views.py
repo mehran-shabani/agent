@@ -105,11 +105,11 @@ def test_post_message_and_response(monkeypatch, api_client, subscription_plan):
     # Post a message
     response = api_client.post(f"/api/session/{session_id}/message/", {"session": session_id, "content": "Hello"})
     assert response.status_code == 200
-    assert response.data["assistant_reply"] == "assistant reply"
+    assert response.data["assistant_reply"] == 'assistant reply'
     # Two messages should be stored in DB (owner and assistant)
     messages = ChatMessage.objects.filter(session_id=session_id)
     assert messages.count() == 2
-    assert messages.filter(role="assistant").first().content == "assistant reply"
+    assert messages.filter(role="assistant").first().content == 'assistant reply'
 
 @pytest.mark.django_db
 def test_post_message_with_profanity(monkeypatch, api_client, subscription_plan):
