@@ -120,8 +120,9 @@ def test_post_message_with_profanity(monkeypatch, api_client, subscription_plan)
     response = api_client.post("/api/session/create/", {"patient_id": profile.id})
     session_id = response.data["session_id"]
     # Force profanity detection to True
-    monkeypatch.setattr("medagent.tools.ProfanityCheckTool._run", lambda self, text: "True")
-    monkeypatch.setattr("medagent.agent_setup.agent.run", lambda msg: "clean reply")
+    monkeypatch.setattr("medagent.tools.ProfanityCheckTool._run", lambda *args, **kwargs: "True")
+    monkeypatch.setattr("medagent.agent_setup.agent.run",    lambda *args, **kwargs: "assistant_reply")
+
     # Post a profane message
     response = api_client.post(f"/api/session/{session_id}/message/", {"session": session_id, "content": "bad words"})
     assert response.status_code == 200

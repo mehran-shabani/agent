@@ -25,7 +25,6 @@ from medagent.models import (
     ChatSession, ChatMessage, SessionSummary, PatientSummary
 )
 from medagent.sms import send_sms
-from medagent.agent_setup import agent
 from medagent.tools import SummarizeSessionTool, ProfanityCheckTool
 
 class RequestOTP(APIView):
@@ -96,6 +95,7 @@ class PostMessage(APIView):
             content = "[پیام حاوی کلمات نامناسب بود]"
 
         ChatMessage.objects.create(session=session, role="owner", content=content)
+        from medagent.agent_setup import agent
 
         
         reply = agent.run(content)

@@ -7,7 +7,6 @@ are handled via environment variables. In tests these functions can be
 patched to return deterministic results.
 """
 
-import os
 import json
 import base64
 import hashlib
