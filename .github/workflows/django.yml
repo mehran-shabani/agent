@@ -51,4 +51,4 @@ jobs:
         KAVEHNEGAR_API_KEY: dummy
         TAKBOT_API_KEY: dummy
       run: |
-        pytest -v medagent
+        pytest
