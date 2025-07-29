@@ -81,7 +81,7 @@ def vision_analyze(
 
     except Exception as e:
         logging.exception("vision_analyze error")
-        return {"error": str(e), "label": "خطا", "finding": "نامشخص"}
+        return {"error": "An error occurred during image analysis.", "label": "خطا", "finding": "نامشخص"}
 
 
 # ---------- Profanity ---------- #
