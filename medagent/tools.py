@@ -116,7 +116,7 @@ class ImageAnalysisTool(BaseTool):
 
     @property
     def is_single_input(self) -> bool:  # pragma: no cover - override for agent
-        return False
+        return True
 
     def _arun(self, *args: Any, **kwargs: Any):
         raise NotImplementedError("async not supported")
