@@ -6,12 +6,18 @@ agent uses a zero-shot ReAct strategy and a simple chat model.
 """
 
 from langchain.agents import initialize_agent, AgentType
-from medagent.tools import (
-    GetPatientSummaryTool, SummarizeSessionTool,
-    ImageAnalysisTool, ProfanityCheckTool
-)
-from medagent.talkbot_llm import TalkBotLLM  # 👈 LLM جدید
 
+# Import tools as classes (should inherit from BaseTool)
+from medagent.tools import (
+    GetPatientSummaryTool,
+    SummarizeSessionTool,
+    ImageAnalysisTool,
+    ProfanityCheckTool,
+)
+
+from medagent.talkbot_llm import TalkBotLLM  # Custom LLM wrapper
+
+# Instantiate tool objects (must be class-based tools)
 TOOLS = [
     GetPatientSummaryTool(),
     SummarizeSessionTool(),
@@ -19,8 +25,10 @@ TOOLS = [
     ProfanityCheckTool(),
 ]
 
+# Instantiate LLM (customized for TalkBot API)
 llm = TalkBotLLM(model="o3-mini")
 
+# Initialize agent with zero-shot ReAct
 agent = initialize_agent(
     tools=TOOLS,
     llm=llm,

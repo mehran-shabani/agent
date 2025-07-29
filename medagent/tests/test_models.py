@@ -10,9 +10,9 @@ from medagent.models import (
     PatientProfile, OTPVerification, ChatSession, ChatMessage,
     SessionSummary
 )
-from sub.models import SubscriptionPlan, Subscription
+from sub.models import CustomUser ,SubscriptionPlan, Subscription
 
-User = get_user_model()
+User = CustomUser if CustomUser else get_user_model()
 
 
 @pytest.mark.django_db

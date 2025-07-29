@@ -10,11 +10,11 @@ using django-simple-history where appropriate.
 import hashlib
 import datetime
 from django.db import models
-from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.utils import timezone
 from simple_history.models import HistoricalRecords
 
-User = settings.AUTH_USER_MODEL
+User = get_user_model()
 
 class PatientProfile(models.Model):
     """A medical profile for a user, separate from any role the user may have."""

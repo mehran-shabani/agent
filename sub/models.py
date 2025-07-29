@@ -7,8 +7,15 @@ determine whether it is active.
 """
 
 from django.db import models
-from django.conf import settings
+from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
+
+
+class CustomUser(AbstractUser):
+    is_doctor = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.username
 
 class SubscriptionPlan(models.Model):
     """
@@ -28,7 +35,7 @@ class Subscription(models.Model):
 
     A subscription is considered active if the current time is before the end_date.
     """
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='subscription')
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='subscription')
     plan = models.ForeignKey(SubscriptionPlan, on_delete=models.PROTECT)
     start_date = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField()

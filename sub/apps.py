@@ -8,6 +8,9 @@ starts. The ready() method imports signal modules to register them.
 from django.apps import AppConfig
 
 class SubConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
     name = 'sub'
+    verbose_name = "مدیریت اشتراک"
+
 
     

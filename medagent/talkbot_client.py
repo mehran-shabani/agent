@@ -15,7 +15,7 @@ import mimetypes
 import requests
 
 TAKBOT_BASE = os.getenv("TALKBOT_API", "https://api.talkbot.ir/v1")
-TALKBOT_TOKEN = os.getenv("TALKBOT_TOKEN", "Bearer demo-token")
+TALKBOT_TOKEN = os.getenv("TALKBOT_API_KEY")
 
 
 def _headers(data: dict):

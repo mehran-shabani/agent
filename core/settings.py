@@ -61,7 +61,7 @@ DATABASES = {
 TALKBOT_API_URL = config('TALKBOT_API_URL', default='https://api.talkbot.ir/v1/chat/completions')
 TALKBOT_API_KEY = config('TALKBOT_API_KEY', default='sk-your-api-key-here')
 
-
+AUTH_USER_MODEL = 'sub.CustomUser'
 
 # Medical Knowledge Base Path
 MEDICAL_KB_PATH = os.path.join(BASE_DIR, 'medical_knowledge')
