@@ -12,5 +12,9 @@ class SubConfig(AppConfig):
     name = 'sub'
     verbose_name = "مدیریت اشتراک"
 
+    def ready(self):
+
+        import sub.signals
+
 
     

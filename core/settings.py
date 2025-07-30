@@ -17,8 +17,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'medagent',
-    'sub',
+    'medagent.app.MedAgentConfig',
+    'sub.app.SubConfig',
     'simple_history',
 ]
 

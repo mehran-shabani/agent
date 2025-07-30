@@ -7,21 +7,20 @@ determine whether it is active.
 """
 
 from django.db import models
-from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
-class CustomUser(AbstractUser):
-    is_doctor = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.username
 
 class SubscriptionPlan(models.Model):
     """
     Represents a purchasable subscription plan. Each plan has a duration in days
     and a price. For example, a 31-day plan might cost 300 units.
     """
+    
+       
     name = models.CharField(max_length=50)
     days = models.PositiveIntegerField(help_text="Duration of the subscription in days")
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -35,7 +34,7 @@ class Subscription(models.Model):
 
     A subscription is considered active if the current time is before the end_date.
     """
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='subscription')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='subscription')
     plan = models.ForeignKey(SubscriptionPlan, on_delete=models.PROTECT)
     start_date = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField()
